@@ -1,0 +1,218 @@
+﻿<Window x:Class="QrCodeGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:QrCodeGenerator"
+        mc:Ignorable="d"
+        Title="Add QR Code to PDF" Height="450" Width="800">
+    <Window.Resources>
+        <!-- Define corporate colors -->
+        <Color x:Key="PrimaryColor">#FFEC6201</Color>
+        <Color x:Key="SecondaryColor">#FF003855</Color>
+        <Style x:Key="NumericTextBoxStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border BorderBrush="#003855" BorderThickness="5">
+                            <AdornedElementPlaceholder />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip"
+                            Value="{Binding RelativeSource={RelativeSource Self}, 
+                                Path=(Validation.Errors)[0].ErrorContent}" />
+                    <Setter Property="BorderBrush" Value="Red"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="StylishButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFEC6201"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#003855"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="3"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="2"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#003855"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="StylishProgressBar" TargetType="ProgressBar">
+            <Setter Property="Foreground" Value="#FFEC6201"/>
+            <Setter Property="Background" Value="#003855"/>
+            <Setter Property="BorderBrush" Value="#FF3737"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="20"/>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="ProgressBar.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Value"
+                                             From="0" To="{Binding Path=Maximum, RelativeSource={RelativeSource AncestorType={x:Type ProgressBar}}}"
+                                             Duration="0:0:2" RepeatBehavior="Forever"/>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="StylishTextBox" TargetType="TextBox">
+            <Setter Property="Foreground" Value="#FFEC6201"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Validation.ErrorTemplate">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border BorderBrush="#003855" BorderThickness="5">
+                            <AdornedElementPlaceholder />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
+
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" LastChildFill="True" Grid.ColumnSpan="3">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                <Image x:Name="logoImage" Source="Resources/Zauner_small.png" Width="30" Height="30" Margin="10" Grid.Column="0" DockPanel.Dock="Top" VerticalAlignment="Top" />
+                <StackPanel DockPanel.Dock="Right" Grid.Column="3" Orientation="Vertical" HorizontalAlignment="Right" >
+                    <Image x:Name="QrCodePreview" Width="100" Height="100" Margin="5,5,5,5" Source="{Binding QrCodePreview}"/>
+                    <!-- Add any other elements related to QR code preview here -->
+                </StackPanel>
+
+                <StackPanel x:Name="QrStylePanel" Orientation="Vertical" HorizontalAlignment="Left" Grid.Column="1">
+                    <Label Content="QR Code Style:" FontWeight="Bold" />
+                    <RadioButton GroupName="QRStyle" Content="Regular" IsChecked="True" />
+                    <RadioButton GroupName="QRStyle" Content="Dotted" IsChecked="{Binding IsDottedSelected, Mode=TwoWay}"/>
+
+                    <!-- Add other radio buttons for adding text column -->
+                </StackPanel>
+                <StackPanel x:Name="ParametersPanel" Orientation="Vertical" HorizontalAlignment="Left" Grid.Column="2">
+                    <Label Content="QR Size:" FontWeight="Bold" />
+
+                    <!-- Width -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="Width:" Width="50" />
+                        <TextBox x:Name="qrSizeWidth" Width="50" Margin="5" Style="{StaticResource StylishTextBox}">
+                            <TextBox.Text >
+                                <Binding Path="SizeWidth" UpdateSourceTrigger="PropertyChanged" Mode="TwoWay">
+                                    <Binding.ValidationRules>
+                                        <!-- <local:RangeValidationRule Min="0" Max="100"/> -->
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
+                    </StackPanel>
+
+                    <!-- Height -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="Height:" Width="50" />
+                        <TextBox x:Name="qrSizeHeight" Width="50" Margin="5" Style="{StaticResource StylishTextBox}">
+                            <TextBox.Text>
+                                <Binding Path="SizeHeight" UpdateSourceTrigger="PropertyChanged" Mode="TwoWay">
+                                    <Binding.ValidationRules>
+                                        <!--<local:RangeValidationRule Min="0" Max="100"/>-->
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
+                    </StackPanel>
+
+                    <Label Content="QR Position:" FontWeight="Bold"/>
+
+                    <!-- Position X -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="X:" Width="50" />
+                        <TextBox x:Name="qrPositionX" Width="50" Margin="5" Style="{StaticResource StylishTextBox}">
+                            <TextBox.Text>
+                                <Binding Path="PositionX" UpdateSourceTrigger="PropertyChanged" Mode="TwoWay">
+                                    <Binding.ValidationRules>
+                                        <!--<local:RangeValidationRule Min="0" Max="100"/>-->
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
+                    </StackPanel>
+
+                    <!-- Position Y -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Label Content="Y:" Width="50" />
+                        <TextBox x:Name="qrPositionY" Width="50" Margin="5" Style="{StaticResource StylishTextBox}">
+                            <TextBox.Text>
+                                <Binding Path="PositionY" UpdateSourceTrigger="PropertyChanged" Mode="TwoWay">
+                                    <Binding.ValidationRules>
+                                        <!--<local:RangeValidationRule Min="0" Max="100"/>-->
+                                    </Binding.ValidationRules>
+                                </Binding>
+                            </TextBox.Text>
+                        </TextBox>
+
+                    </StackPanel>
+                </StackPanel>
+
+
+            </Grid>
+
+        </DockPanel>
+
+        <ListView x:Name="lvFiles"  
+                  ItemsSource="{Binding Files}"
+                  Grid.Row="1"
+                  Padding="1"
+                  AllowDrop="True" 
+                  DragEnter="ListView_DragEnter" 
+                  DragOver="ListView_DragOver" 
+                  DragLeave="ListView_DragLeave" 
+                  Drop="ListView_Drop"
+                  HorizontalAlignment="Stretch" 
+                  VerticalAlignment="Stretch" Margin="5,1,5,5"
+                  KeyDown="LvFiles_KeyDown">
+
+            <ListView.View>
+                <GridView>
+                    <!-- Add columns for file name and path -->
+                    <GridViewColumn Header="File Name" DisplayMemberBinding="{Binding FileName}" />
+                    <GridViewColumn Header="File Path" DisplayMemberBinding="{Binding FilePath}" />
+                    <!-- Add additional columns as necessary -->
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Button Content="Select Files" Style="{StaticResource StylishButton}" Command="{Binding SelectFilesCommand}"/>
+            <Button Content="Add QR Codes" Style="{StaticResource StylishButton}" Command="{Binding AddQrCodeCommand}" IsDefault="True">
+            </Button>
+            <ProgressBar x:Name="progressBar" 
+             Maximum="100" Value="{Binding CurrentProgress}"
+             Width="200" Padding="3"/>
+
+        </StackPanel>
+    </Grid>
+</Window>
